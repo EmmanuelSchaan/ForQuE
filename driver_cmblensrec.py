@@ -8,8 +8,11 @@ from cmb_lensing_rec import *
 
 
 
-# CMB S4: 3' beam fwhm, 1muK' white noise
-cmb = StageIVCMB(beam=3., noise=1.)
+# CMB S4:
+# 3' beam fwhm, 1muK' white noise
+# lmin=30 for temperature and polarization
+# lmax=3000 for temperature, 5000 for polarization
+cmb = StageIVCMB(beam=3., noise=1., lMin=30., lMaxT=3.e3, lMaxP=5.e3)
 
 # Other experiments
 #cmb = PlanckSMICACMB()
