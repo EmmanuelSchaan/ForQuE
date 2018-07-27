@@ -1,4 +1,4 @@
-#  CMB Lensing noise power spectra
+#  ForQuE
 
 Computes the noise power spectrum for the CMB lensing quadratic estimators from temperature and polarization from Hu & Okamoto 2002, for any CMB experiment. 
 
