@@ -1,9 +1,8 @@
 from headers import *
 
 ###############################################################################
-# Class containing all templates for CMB components at various frequencies
-# from Dunkley et al 2013.
-# All the maps are debeamed, ie a shot noise component is ell-independent,
+# class containing all templates for CMB components at various frequencies
+# all the maps are debeamed, ie a shot noise component is ell-independent,
 # and the detector noise grows exponentially with the beam.
 # Signal and noise are assumed to be in muK^2*steradian.
 
@@ -612,6 +611,90 @@ class CMB(object):
 
 
 
+   def plotClfewer(self):
+      
+      Nl = 1001
+      L = np.logspace(np.log10(1.), np.log10(3.6e4), Nl, 10.)
+      
+      LensedCMB = np.array(map(lambda l: self.flensedTT(l), L))
+      CIBPoisson = np.array(map(lambda l: self.fCIBPoisson(l), L))
+      CIBClustered = np.array(map(lambda l: self.fCIBClustered(l), L))
+      TSZ = np.array(map(lambda l: self.ftSZ(l), L))
+      KSZ = np.array(map(lambda l: self.fkSZ(l), L))
+      TSZ_CIB = np.array(map(lambda l: self.ftSZ_CIB(l), L))
+      RadioPoisson = np.array(map(lambda l: self.fradioPoisson(l), L))
+      GalacticDust = np.array(map(lambda l: self.fgalacticDust(l), L))
+      DetectorNoise = np.array(map(lambda l: self.fdetectorNoise(l), L))
+      Total = np.array(map(lambda l: self.ftotalTT(l), L))
+      
+      '''
+      # save arrays
+      Data = np.zeros((Nl, 11))
+      Data[:,0] = L
+      Data[:,1] = LensedCMB
+      Data[:,2] = CIBPoisson
+      Data[:,3] = CIBClustered
+      Data[:,4] = TSZ
+      Data[:,5] = KSZ
+      Data[:,6] = TSZ_CIB
+      Data[:,7] = RadioPoisson
+      Data[:,8] = GalacticDust
+      Data[:,9] = DetectorNoise
+      Data[:,10] = Total
+      #np.savetxt("./output/dl_elldpdtILC_ACT148_ACT218.txt", Data)
+      #np.savetxt("./output/dl_ACT148.txt", Data)
+      '''
+      
+      #return Total - DetectorNoise
+      
+      # pixel noise power spectrum Cl
+      # this time in terms of what is actually on the sky,
+      # ie after beam correction
+      fig=plt.figure(0, figsize=(12, 8))
+      ax=plt.subplot(111)
+      #
+      Beam = np.array(map(self.fbeam , L))
+      factor = L*(L+1.)/(2.*np.pi) / Beam**2
+      #
+      ax.loglog(L, factor*Total, 'k', lw=5, label=r'total')
+      ax.loglog(L, factor*abs(LensedCMB), 'b', lw=3, label=r'lensed CMB')
+      ax.loglog(L, factor*DetectorNoise, 'k--', lw=3, label=r'detector noise')
+      ax.loglog(L, factor*(CIBPoisson+CIBClustered+TSZ+TSZ_CIB+RadioPoisson+GalacticDust), 'g-', lw=3, label=r'tSZ, CIB, Radio sources, dust')
+      ax.loglog(L, factor*KSZ, 'r', lw=5, label=r'kSZ')
+      #
+      # beam for cmb s4
+      def fbeamS4(l):
+         fwhm = 1. * (np.pi/180.) / 60.   # 1 arcmin
+         sigma_beam = fwhm / np.sqrt(8.*np.log(2.))
+         return np.exp(-0.5*l**2 * sigma_beam**2)
+      #
+      # detector noise for cmb s4
+      sensitivity = 1.*(np.pi/180.)/60.   # 1muK.arcmin
+      factor = L*(L+1.)/(2.*np.pi) / fbeamS4(L)**2
+      ax.loglog(L, factor*sensitivity**2, 'k--', lw=3)
+      
+      #ax.loglog(L, CIBPoisson, 'b--', lw=2, label=r'CIB poisson')
+      #ax.loglog(L, CIBClustered, 'b--', lw=2, label=r'CIB clustered')
+      #ax.loglog(L, TSZ, 'g', lw=2, label=r'tSZ')
+      #ax.loglog(L, np.abs(TSZ_CIB), 'm', lw=2, label=r'$|$ tSZ x CIB $|$')
+      #ax.loglog(L, RadioPoisson, 'y', lw=2, label=r'radio Poisson')
+      #ax.loglog(L, GalacticDust, 'r', lw=2, label=r'galactic dust')
+      #ax.loglog(L, LensedCMB+DetectorNoise, 'k-.', lw=2, label=r'CMB+detector noise')
+      #
+      ax.grid()
+      ax.legend(loc='center left')
+      ax.set_xlim((1.e2, 1.e4))
+      ax.set_ylim((1.e-1, 1.e4))
+      ax.set_xlabel(r'$\ell$', fontsize=28)
+      ax.set_ylabel(r'$\frac{\ell (\ell+1)}{2\pi} \;  C_\ell$ [$(\mu K)^2$]', fontsize=28)
+      #ax.set_title(r'Pixel noise $C_l$ ('+self.name+')')
+      #
+      #fig.savefig("./figures/pixel_noise/pixelnoiseCl_"+self.name+".pdf")
+      #fig.savefig("~/Desktop/plot_cl_talk.pdf")
+      
+      plt.show()
+
+
 
    def plotTEB(self):
       
@@ -708,6 +791,73 @@ class CMB(object):
 
 
 
+   def timeT(self):
+      tStart = time()
+      
+      Nl = 1001
+      L = np.logspace(np.log10(1.), np.log10(3.6e4), Nl, 10.)
+      for il in range(Nl):
+         l = L[il]
+         result = self.ftotalTT(l)
+         #result = self.flensedTT(l)
+      
+      tStop = time()
+      print "took", (tStop-tStart)/Nl, "sec per evaluation"
+
+
+   def genWiggleNoWiggle(self, test=False):
+      """Create a wiggle-only and a no-wiggle CMB unlensed power spectrum,
+      By doing a smooth interpolation. A bit of an art...
+      """
+
+      L = np.linspace(10., 1.e4, 2001)
+      ClCmb = np.array(map(self.funlensedTT, L))
+
+      # no-wiggle power spectrum
+      forUnlensedTTNoWiggle = UnivariateSpline(np.log(L), np.log(ClCmb), k=3, s=20., ext='const')
+      funlensedTTNoWiggle = lambda l: np.exp(forUnlensedTTNoWiggle(np.log(l)))
+      ClCmbNoWiggle = np.array(map(funlensedTTNoWiggle, L))
+
+      # wiggle-only power spewctrum
+      forUnlensedTTWiggleOnly = UnivariateSpline(np.log(L), ClCmb-ClCmbNoWiggle, k=3, s=0., ext='const')
+      funlensedTTWiggleOnly = lambda l: forUnlensedTTWiggleOnly(np.log(l))
+      ClCmbWiggleOnly = np.array(map(funlensedTTWiggleOnly, L))
+
+      if test:
+         
+         fig=plt.figure(0)
+         ax=fig.add_subplot(111)
+         #
+         ax.plot(L, L*(L+1.)/(2.*np.pi)*ClCmb, 'k', label=r'true')
+         ax.plot(L, L*(L+1.)/(2.*np.pi)*ClCmbNoWiggle, 'b', label=r'no-wiggle')
+         ax.plot(L, L*(L+1.)/(2.*np.pi)*ClCmbWiggleOnly, 'r', label=r'wiggle-only')
+         ax.plot(L, -L*(L+1.)/(2.*np.pi)*ClCmbWiggleOnly, 'r--')
+         #
+         ax.legend()
+         ax.set_xscale('log')
+         ax.set_yscale('log')
+         ax.set_xlabel(r'$\ell$')
+         ax.set_ylabel(r'$C_\ell$')
+
+         plt.show()
+
+
+         fig=plt.figure(1)
+         ax=fig.add_subplot(111)
+         #
+         ax.plot(L, ClCmb/ClCmb, 'k')
+         ax.plot(L, ClCmb/ClCmbNoWiggle, 'b')
+         #
+         ax.set_xscale('log')
+         #ax.set_yscale('log')
+         ax.set_xlabel(r'$\ell$')
+         ax.set_ylabel(r'$C_\ell / C_\ell^\text{no wiggle}$')
+
+         plt.show()
+
+      return funlensedTTNoWiggle, funlensedTTWiggleOnly
+
+
 
 ###############################################################################
 ###############################################################################
@@ -773,6 +923,10 @@ class ACTPolCMB(CMB):
       # detector sensitivity in muK*rad.
       # 18 muK*arcmin
       self.sensitivity = 18.*(np.pi/180.)/60.
+      #
+      self.lMin = 30.
+      self.lMaxT = 3.e3
+      self.lMaxP = 5.e3
       
       super(ACTPolCMB, self).__init__()
 
@@ -794,7 +948,11 @@ class AdvACTCMB(CMB):
       # detector sensitivity in muK*rad.
       # 10 muK*arcmin
       self.sensitivity = 10.*(np.pi/180.)/60.
-      
+      #
+      self.lMin = 30.
+      self.lMaxT = 3.e3
+      self.lMaxP = 5.e3
+
       super(AdvACTCMB, self).__init__()
 
 
@@ -855,6 +1013,211 @@ class HuOkamoto2002(CMB):
       self.sensitivity = 1.*(np.pi/180.)/60.
       
       super(HuOkamoto2002, self).__init__()
+
+
+###############################################################################
+###############################################################################
+# CIB
+
+class CIB(CMB):
+   
+   def __init__(self, beam=1., noise=1., nu1=143.e9, nu2=143.e9, lMin=30., lMaxT=3.e3, lMaxP=5.e3, name=None):
+      # name
+      if name is None:
+         self.name = "cib_nu"+str(int(nu1/1.e9))+"_nu"+str(int(nu2/1.e9))+"_beam"+str(round(beam, 3))+"_noise"+str(round(noise, 3))+"_lmin"+str(int(lMin))+"_lmaxT"+str(int(lMaxT))+"_lmaxP"+str(int(lMaxP))
+      else:
+         self.name = name
+      # frequencies in Hz (irrelevant)
+      self.nu1 = nu1
+      self.nu2 = nu2
+      # beam fwhm in radians
+      self.fwhm = beam * (np.pi/180.)/60.
+      # detector sensitivity in muK*rad.
+      self.sensitivity = noise * (np.pi/180.)/60.
+      # ell limits
+      self.lMin = lMin
+      self.lMaxT = lMaxT
+      self.lMaxP = lMaxP
+      
+      super(CIB, self).__init__()
+      
+      # do not include the foregrounds in the total (cleaned map)
+      self.funlensedTT = lambda l: self.fCIB(l, nu1, nu2)
+      self.funlensedEE = lambda l: 0.
+      self.funlensedBB = lambda l: 0.
+      self.funlensedTE = lambda l: 0.
+      #
+      self.ftotalTT = lambda l: self.fCIB(l, nu1, nu2) + self.fdetectorNoise(l)
+      self.ftotalEE = lambda l: 0. + 2.*self.fdetectorNoise(l)
+      self.ftotalBB = lambda l: 0. + 2.*self.fdetectorNoise(l)
+      self.ftotalTE = lambda l: 0.
+
+
+###############################################################################
+###############################################################################
+# !!!!!!!!! Incomplete
+# CIB: fit to the auto-spectrum of Planck 15 GNILC maps, from Simo
+# beam is 5arcmin for all frequencies
+# the noise is incorrect here
+# unit here is MJy/sr for the power spectrum
+
+class CIBPlanck15FitSimo(CMB):
+   
+   def __init__(self, beam=5., noise=1., nu1=143.e9, nu2=143.e9, lMin=30., lMaxT=3.e3, lMaxP=5.e3):
+      # name
+      self.name = "cibplanckfit_nu"+str(int(nu1/1.e9))+"_nu"+str(int(nu2/1.e9))+"_beam"+str(round(beam, 3))+"_noise"+str(round(noise, 3))+"_lmin"+str(int(lMin))+"_lmaxT"+str(int(lMaxT))+"_lmaxP"+str(int(lMaxP))
+      # frequencies in Hz (irrelevant)
+      self.nu1 = nu1
+      self.nu2 = nu2
+      # beam fwhm in radians
+      self.fwhm = beam * (np.pi/180.)/60.
+      # detector sensitivity in muK*rad.
+      self.sensitivity = noise * (np.pi/180.)/60.
+      # ell limits
+      self.lMin = lMin
+      self.lMaxT = lMaxT
+      self.lMaxP = lMaxP
+      
+      super(CIB, self).__init__()
+      
+      # do not include the foregrounds in the total (cleaned map)
+      self.funlensedTT = lambda l: self.fCIB(l, nu1, nu2)
+      self.funlensedEE = lambda l: 0.
+      self.funlensedBB = lambda l: 0.
+      self.funlensedTE = lambda l: 0.
+      #
+      self.ftotalTT = lambda l: self.fCIB(l, nu1, nu2) + self.fdetectorNoise(l)
+      self.ftotalEE = lambda l: 0. + 2.*self.fdetectorNoise(l)
+      self.ftotalBB = lambda l: 0. + 2.*self.fdetectorNoise(l)
+      self.ftotalTE = lambda l: 0.
+
+
+   ###############################################################################
+   # CIB Poisson and clustered
+
+   def fCIBPoisson(self, l, nu1=None, nu2=None):
+      a_CIBP = 7.0
+      Td = 9.7
+      betaP = 2.1
+      if nu1 is None:
+         nu1 = self.nu1
+      if nu2 is None:
+         nu2 = self.nu2
+         return a_CIBP/a * (l/3000.)**2 * self.mu(nu1, betaP, Td)*self.mu(nu2, betaP, Td)/self.mu(150.e9, betaP, Td)**2 * self.fdl_to_cl(l)
+
+   def fCIBClustered(self, l, nu1=None, nu2=None):
+      a_CIBC = 5.7
+      n = 1.2
+      Td = 9.7
+      betaC = 2.1
+      if nu1 is None:
+         nu1 = self.nu1
+      if nu2 is None:
+         nu2 = self.nu2
+         return a_CIBC * (l/3000.)**(2-n) * self.mu(nu1, betaC, Td)*self.mu(nu2, betaC, Td)/self.mu(150.e9, betaC, Td)**2 * self.fdl_to_cl(l)
+   
+   def fCIB(self, l, nu1=None, nu2=None):
+      return self.fCIBPoisson(l, nu1, nu2) + self.fCIBClustered(l, nu1, nu2)
+
+###############################################################################
+###############################################################################
+# CIB halo model, tabulated
+# sent to me by Hao-Yi Wu at NORDITA conference, summer 2017
+# from Wu Dore 2017
+# units are Jy^2/sr for the power spectra
+
+class CIBWuDore17(CMB):
+   
+   def __init__(self, beam=1., noise=1., nu1=143.e9, nu2=143.e9, lMin=30., lMaxT=3.e3, lMaxP=5.e3):
+      # name
+      #      self.name = "cmbs4"
+      self.name = "cib_wudore17_nu"+str(int(nu1/1.e9))+"_nu"+str(int(nu2/1.e9))+"_beam"+str(round(beam, 3))+"_noise"+str(round(noise, 3))+"_lmin"+str(int(lMin))+"_lmaxT"+str(int(lMaxT))+"_lmaxP"+str(int(lMaxP))
+      # frequencies in Hz
+      self.nu1 = nu1
+      self.nu2 = nu2
+      # convert beam fwhm from arcmin to rad
+      self.fwhm = beam * (np.pi/180.)/60.
+      # noise assumed to be in Jy / rad
+      self.sensitivity = noise
+      # ell limits
+      self.lMin = lMin
+      self.lMaxT = lMaxT
+      self.lMaxP = lMaxP
+      
+      super(CIBWuDore17, self).__init__()
+      
+      # load tabulated spectra from Wu Dore 2017
+      # shot noises in Jy/sr, for freq in GHz
+      self.shotNoises = {217: 13.5556, 353:228.754, 545: 1796.18, 857: 7379.63}
+      self.loadTabulatedCIB(nu1, nu2)
+      
+      # do not include the foregrounds in the total (cleaned map)
+      self.funlensedTT = lambda l: self.fCIB(l)
+      self.funlensedEE = lambda l: 0.
+      self.funlensedBB = lambda l: 0.
+      self.funlensedTE = lambda l: 0.
+      #
+      self.ftotalTT = lambda l: self.fCIB(l) + self.fdetectorNoise(l)
+      self.ftotalEE = lambda l: 0. + 2.*self.fdetectorNoise(l)
+      self.ftotalBB = lambda l: 0. + 2.*self.fdetectorNoise(l)
+      self.ftotalTE = lambda l: 0.
+
+
+   def loadTabulatedCIB(self, nu1, nu2):
+      # read the data file
+      nu1, nu2 = np.sort([nu1, nu2])
+      path = "./input/cib_wu_dore_17/CL_1h2h_"+str(int(nu1/1.e9))+"x"+str(int(nu2/1.e9))+"_base.dat"
+      data = np.genfromtxt(path)
+      
+      # interpolate the 1h, 2h and shot noise
+      self.flnCIB_1hln = interp1d(np.log(data[:,0]), np.log(data[:,1]), kind='linear', bounds_error=False, fill_value='extrapolate')
+      self.fCIB_1h = lambda l: np.exp(self.flnCIB_1hln(np.log(l)))
+      #
+      self.flnCIB_2hln = interp1d(np.log(data[:,0]), np.log(data[:,2]), kind='linear', bounds_error=False, fill_value='extrapolate')
+      self.fCIB_2h = lambda l: np.exp(self.flnCIB_2hln(np.log(l)))
+      #
+      if (nu1==nu2):
+         self.fCIB_shot = lambda l: self.shotNoises[int(nu1/1.e9)]# *(l>=data[0,0])*(l<=data[-1,0])
+      else:
+         self.fCIB_shot = lambda l: 0.
+      #
+      self.fCIB = lambda l: self.fCIB_1h(l) + self.fCIB_2h(l) + self.fCIB_shot(l)
+
+
+   def plot(self):
+      # check the interpolation
+      L = np.logspace(np.log10(1.), np.log10(1.e5), 1001, 10.)
+      Cl_1h = np.array(map(self.fCIB_1h, L))
+      Cl_2h = np.array(map(self.fCIB_2h, L))
+      Cl_shot = np.array(map(self.fCIB_shot, L))
+      Cl = np.array(map(self.fCIB, L))
+      
+      # superimpose the data points to check
+      nu1, nu2 = np.sort([self.nu1, self.nu2])
+      path = "./input/cib_wu_dore_17/CL_1h2h_"+str(int(nu1/1.e9))+"x"+str(int(nu2/1.e9))+"_base.dat"
+      data = np.genfromtxt(path)
+      
+
+      fig=plt.figure(0)
+      ax=fig.add_subplot(111)
+      #
+      # table from Hao-Yi Wu
+      ax.loglog(data[:,0], data[:,1], 'k.')
+      ax.loglog(data[:,0], data[:,2], 'k.')
+      #
+      # interpolated values
+      ax.loglog(L, Cl, 'k', label=r'total')
+      ax.loglog(L, Cl_2h, 'r', label=r'2h')
+      ax.loglog(L, Cl_1h, 'b', label=r'1h')
+      ax.loglog(L, Cl_shot, 'g', label=r'shot')
+      #
+      ax.legend(loc=1)
+      ax.set_xlabel(r'$\ell$')
+      ax.set_ylabel(r'$C_\ell^{'+str(int(self.nu1/1.e9))+'-'+str(int(self.nu2/1.e9))+'}$ [Jy$^2$/sr]')
+      #
+      fig.savefig("/Users/Emmanuel/Desktop/cib_power_wudore17.pdf", bbox_inches='tight')
+
+      plt.show()
 
 
 

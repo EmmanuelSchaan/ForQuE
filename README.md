@@ -1,6 +1,6 @@
 #  ForQuE
 
-Computes the noise power spectrum for the CMB lensing quadratic estimators from temperature and polarization from Hu & Okamoto 2002, for any CMB experiment. 
+Computes the noise power spectrum for the CMB lensing quadratic estimators from temperature and polarization from Hu & Okamoto 2002, for any CMB experiment. The minimum-variance estimator takes into account the noise covariance of the various quadratic estimators.
 
 Requires the Monte Carlo library vegas (https://pypi.org/project/vegas):
 ```

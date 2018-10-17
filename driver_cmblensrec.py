@@ -20,8 +20,8 @@ cmb = StageIVCMB(beam=3., noise=1., lMin=30., lMaxT=3.e3, lMaxP=5.e3)
 #cmb = AdvACTCMB()
 
 # show the CMB power spectrum, noise and foregrounds
-cmb.plotCl()
-cmb.plotTEB()
+#cmb.plotCl()
+#cmb.plotTEB()
 
 # Compute the CMB lensing noise
 cmbLensRec = CMBLensRec(cmb, save=False)
