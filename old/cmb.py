@@ -103,36 +103,7 @@ class CMB(object):
       self.ftotalTE = lambda l: self.flensedTE(l)
 
       ###########################################
-      # New interpolation, with extrapolation at high ell
-      
-      # tSZ: Dunkley et al 2013
-      data = np.genfromtxt("./input/cmb/digitizing_SZ_template/tSZ.txt")
-      ftSZ_template = interp1d(data[:,0], data[:,1], kind='linear', bounds_error=False, fill_value='extrapolate')
-      a_tSZ = 4.0
-      self.ftSZ = lambda l: a_tSZ * self.freqDpdceTSZTemp(self.nu1)*self.freqDpdceTSZTemp(self.nu2)/self.freqDpdceTSZTemp(150.e9)**2 * ftSZ_template(l) * self.fdl_to_cl(l)
 
-
-      # kSZ: Dunkley et al 2013
-      data = np.genfromtxt("./input/cmb/digitizing_SZ_template/kSZ.txt")
-      fkSZ_template = interp1d(data[:,0], data[:,1], kind='linear', bounds_error=False, fill_value='extrapolate')
-      a_kSZ = 1.5  # 1.5 predicted by Battaglia et al 2010. Upper limit from Dunkley+13 is 5.
-      self.fkSZ = lambda l: a_kSZ * fkSZ_template(l) * self.fdl_to_cl(l)
-
-      # tSZ x CIB: Dunkley et al 2013
-      xi = 0.2 # upper limit at 95% confidence
-      a_tSZ = 4.0
-      a_CIBC = 5.7
-      betaC = 2.1
-      Td = 9.7
-      # watch for the minus sign
-      data = np.genfromtxt ("./input/cmb/digitizing_tSZCIB_template/minus_tSZ_CIB.txt")
-      ftSZCIB_template = interp1d(data[:,0], data[:,1], kind='linear', bounds_error=False, fill_value='extrapolate')
-      self.ftSZ_CIB = lambda l: (-2.)*xi*np.sqrt(a_tSZ*a_CIBC)* self.fprime(self.nu1, self.nu2, betaC, Td)/self.fprime(150.e9, 150.e9, betaC, Td) * ftSZCIB_template(l) * self.fdl_to_cl(l)
-      
-
-      ###########################################
-      # Old interpolation
-      '''
       # tSZ: Dunkley et al 2013
       data = np.genfromtxt("./input/cmb/digitizing_SZ_template/tSZ.txt")
       ftSZ_template = UnivariateSpline(data[:,0], data[:,1],k=1,s=0)
@@ -141,7 +112,6 @@ class CMB(object):
       lmax_tSZ = data[-1,0]
       self.ftSZ = lambda l: (l>=lmin_tSZ and l<=lmax_tSZ) * a_tSZ * self.freqDpdceTSZTemp(self.nu1)*self.freqDpdceTSZTemp(self.nu2)/self.freqDpdceTSZTemp(150.e9)**2 * ftSZ_template(l) * self.fdl_to_cl(l)
 
-
       # kSZ: Dunkley et al 2013
       data = np.genfromtxt("./input/cmb/digitizing_SZ_template/kSZ.txt")
       fkSZ_template = UnivariateSpline(data[:,0], data[:,1],k=1,s=0)
@@ -149,9 +119,8 @@ class CMB(object):
       lmin_kSZ = data[0,0]
       lmax_kSZ = data[-1,0]
       self.fkSZ = lambda l: (l>=lmin_kSZ and l<=lmax_kSZ) * a_kSZ * fkSZ_template(l) * self.fdl_to_cl(l)
-
-
-      # tSZ x CIB: Dunkley et al 2013
+   
+      # tSZ x CMB: Dunkley et al 2013
       xi = 0.2 # upper limit at 95% confidence
       a_tSZ = 4.0
       a_CIBC = 5.7
@@ -163,8 +132,8 @@ class CMB(object):
       lmin_tSZ_CIB = data[0,0]
       lmax_tSZ_CIB = data[-1,0]
       self.ftSZ_CIB = lambda l: (l>=lmin_tSZ_CIB and l<=lmax_tSZ_CIB) * (-2.)*xi*np.sqrt(a_tSZ*a_CIBC)* self.fprime(self.nu1, self.nu2, betaC, Td)/self.fprime(150.e9, 150.e9, betaC, Td) * ftSZCIB_template(l) * self.fdl_to_cl(l)
-      '''
-   
+
+
    ###############################################################################
    # beam and detector noise
 
@@ -229,7 +198,7 @@ class CMB(object):
    def freqDpdceTSZIntensity(self, nu):
       return self.freqDpdceTSZTemp(nu) * self.dlnBdlnT(nu, self.Tcmb)
    
-   # frequency dependence for tSZxCIB
+
    def fprime(self, nu1, nu2, beta, T):
       return self.freqDpdceTSZTemp(nu1) * self.mu(nu2, beta, T) + self.freqDpdceTSZTemp(nu2) * self.mu(nu1, beta, T)
    
@@ -524,18 +493,14 @@ class CMB(object):
    # if none, use the beam as profile (ie point source)
    # If temperature map in muK, then output in muK*sr
    # If temperature map in Jy/sr, then output in Jy
-   def fsigmaMatchedFilter(self, fprofile=None, ftotalTT=None, lMin=None, lMax=None):
+   def fsigmaMatchedFilter(self, fprofile=None, ftotalTT=None):
       if ftotalTT is None:
          ftotalTT = self.ftotalTT
       if fprofile is None:
          f = lambda l: l/(2.*np.pi) / ftotalTT(l)
       else:
          f = lambda l: l/(2.*np.pi) * fprofile(l) / ftotalTT(l)
-      if lMin is None:
-         lMin = self.lMin
-      if lMax is None:
-         lMax = self.lMaxT
-      result = integrate.quad(f, lMin, lMax, epsabs=0., epsrel=1.e-3)[0]
+      result = integrate.quad(f, self.lMin, self.lMaxT, epsabs=0., epsrel=1.e-3)[0]
       result = 1./np.sqrt(result)
       return result
 
