@@ -54,7 +54,7 @@ cmbLensRec.plotNoiseQSD()
 # precompute the multipoles of the lensing response f_TT
 #cmbLensRec.save_f_TT_multipoles()
 cmbLensRec.load_f_TT_multipoles()
-cmbLensRec.plot_f_TT_multipoles()
+#cmbLensRec.plot_f_TT_multipoles()
 
 # precompute the lensing noise for the monopole and quadrupole estimators
 #cmbLensRec.save_N_k_TT_multipoles()
