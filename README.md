@@ -10,9 +10,11 @@ Requires the Monte Carlo library vegas (https://pypi.org/project/vegas):
 ```
 pip install vegas
 ```
-Just clone and run:
+Clone the repository, then run:
 ```
 python driver_cmblensrec.py
 ```
-Hope you find this code useful! Please cite https://arxiv.org/abs/1607.01761 if you use this code in a publication. Do not hesitate to contact me with any questions: eschaan@lbl.gov
+To compute the lensing noises.
+
+Hope you find this code useful! Please cite https://arxiv.org/abs/1607.01761 and https://arxiv.org/abs/1804.06403 if you use this code in a publication. Do not hesitate to contact me with any questions: eschaan@lbl.gov
 
