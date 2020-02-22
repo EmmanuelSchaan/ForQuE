@@ -9,3 +9,11 @@ from time import time
 # https://pypi.org/project/vegas/
 # install with: pip install vegas
 import vegas
+
+# OpenMP parallel calculations
+from pathos.multiprocessing import ProcessingPool as Pool
+
+import utils
+reload(utils)
+from utils import *
+

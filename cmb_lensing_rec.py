@@ -19,8 +19,8 @@ class CMBLensRec(object):
       self.lMax = max(self.CMB.lMaxT, self.CMB.lMaxP)
       
       # values of ell to compute the reconstruction noise
-#      self.L = np.genfromtxt("./input/Lc.txt") # center of the bins for l
-      self.L = np.logspace(np.log10(1.), np.log10(2.*self.lMax+1.), 201, 10.)
+#      self.L = np.logspace(np.log10(1.), np.log10(2.*self.lMax+1.), 201, 10.)
+      self.L = np.logspace(np.log10(1.), np.log10(2.*self.lMax+1.), 51, 10.)
       self.Nl = len(self.L)
       
       # output file path
@@ -352,7 +352,7 @@ class CMBLensRec(object):
          XY = est[iEst]
          ax.plot(self.L, self.fN_k[XY](self.L), c=plt.cm.rainbow(iEst/4.), lw=1.5, label=XY)
       #
-      ax.legend(loc=2, labelspacing=0.)
+      ax.legend(loc=2, fontsize='x-small', labelspacing=0.1)
       ax.set_xscale('log')
       ax.set_yscale('log', nonposy='mask')
       ax.set_xlabel(r'$L$', fontsize=24)
@@ -554,7 +554,7 @@ class CMBLensRec(object):
       if pol:
          ax.plot(self.L, self.fN_k['mv'](self.L), 'k--', lw=1.5, label=r'min. var.')
       #
-      ax.legend(loc=2, labelspacing=0.)
+      ax.legend(loc=2, fontsize='x-small', labelspacing=0.1)
       ax.set_xscale('log')
       ax.set_yscale('log', nonposy='mask')
       ax.set_xlabel(r'$L$', fontsize=24)
@@ -578,7 +578,7 @@ class CMBLensRec(object):
          ax.loglog(self.L, np.abs(self.fN_k_XY_WZ['TEEE'](self.L)), 'g', lw=2, label=r'TE-EE')
          ax.loglog(self.L, np.abs(self.fN_k_XY_WZ['TBEB'](self.L)), 'c', lw=2, label=r'TB-EB')
          #
-         ax.legend(loc=2)
+         ax.legend(loc=2, fontsize='x-small', labelspacing=0.1)
          ax.set_xlabel(r'$\ell$')
          ax.set_ylabel(r'$| N_\ell^{\kappa \kappa \prime} |$')
          ax.set_title(r'Lensing noise covariances')
@@ -750,7 +750,7 @@ class CMBLensRec(object):
       #
       ax.plot(self.L, self.fN_k['TT'](self.L), 'k--', lw=1., label='qTT: check')
       #
-      ax.legend(loc=2, labelspacing=0.)
+      ax.legend(loc=2, fontsize='x-small', labelspacing=0.1)
       ax.set_xscale('log')
       ax.set_yscale('log', nonposy='mask')
       ax.set_xlabel(r'$L$', fontsize=24)
@@ -1233,7 +1233,7 @@ class CMBLensRec(object):
          #
          ax.loglog([], [], c=plt.cm.winter(0.), label=r'non-perturbative')
          ax.loglog([], [], c=plt.cm.winter(0.), ls='--', label=r'squeezed')
-         ax.legend(loc=3)
+         ax.legend(loc=3, fontsize='x-small', labelspacing=0.1)
          ax.set_xlabel(r'$\ell$')
          ax.set_ylabel(r'$f^{m}(L, \ell)$')
          ax.set_title(r'Multipole '+str(m))
@@ -1425,7 +1425,7 @@ class CMBLensRec(object):
       ax.plot(self.L, self.fN_k['TT'](self.L), 'k', label=r'QE')
       ax.plot(self.L, self.fN_k_TT_m[-1](self.L), 'k--', label=r'QE (test)')
       #
-      ax.legend(loc=2, labelspacing=0.)
+      ax.legend(loc=2, fontsize='x-small', labelspacing=0.1)
       ax.set_xscale('log')
       ax.set_yscale('log', nonposy='mask')
       ax.set_xlabel(r'$L$', fontsize=24)
@@ -1561,7 +1561,7 @@ class CMBLensRec(object):
          ax.plot(L1, snr2Density, lw=2, c='r', label=r'$L_\phi=$'+str(int(L[iL])))
          ax.plot(L1, dNLkappadlnl_theory, 'r', ls='--', lw=1)
       #
-      ax.legend(loc=1)
+      ax.legend(loc=1, fontsize='x-small', labelspacing=0.1)
       ax.set_xscale('log', nonposx='clip')
       ax.set_xlabel(r'$\ell_T$')
       ax.set_ylabel(r'$d\text{SNR}(\phi_L)^2/d\text{ln}\ell_T$')
@@ -1908,7 +1908,7 @@ class CMBLensRec(object):
       ax.loglog(self.L, TT, c='k', label=r'TT')
       ax.loglog(self.L, EB, c='b', label=r'EB')
       #
-      ax.legend(loc=1)
+      ax.legend(loc=1, fontsize='x-small', labelspacing=0.1)
       #ax.set_ylim((1.e-4, 1.))
       ax.set_xlabel(r'$L$')
       ax.set_ylabel(r'$N^{0, \text{NG}} / N^{0, \text{G}} / \mathcal{T}$')
@@ -1923,7 +1923,7 @@ class CMBLensRec(object):
       ax.loglog(self.L, N_EB_G, 'b', label=r'EB')
       ax.loglog(self.L, EB * N_EB_G * Trispec, 'b--', label=r'EB PS')
       #
-      ax.legend(loc=1)
+      ax.legend(loc=1, fontsize='x-small', labelspacing=0.1)
       #ax.set_ylim((1.e-4, 1.))
       ax.set_xlabel(r'$L$')
       ax.set_ylabel(r'N^{0 \; \kappa}$')

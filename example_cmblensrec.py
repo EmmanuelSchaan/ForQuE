@@ -15,7 +15,7 @@ from cmb_lensing_rec import *
 lMinT = 30.
 lMaxT = 3.e3
 lMaxP = 5.e3
-cmb = StageIVCMB(beam=1., noise=1., lMin=lMinT, lMaxT=lMaxT, lMaxP=lMaxP, atm=False, name=None)
+cmb = CMB(beam=1., noise=1., nu1=143.e9, nu2=143.e9, lMin=lMinT, lMaxT=lMaxT, lMaxP=lMaxP, fg=True, atm=False, name="cmbs4")
 
 
 ##################################################################################
@@ -54,7 +54,7 @@ cmbLensRec.plotNoiseQSD()
 # precompute the multipoles of the lensing response f_TT
 #cmbLensRec.save_f_TT_multipoles()
 cmbLensRec.load_f_TT_multipoles()
-#cmbLensRec.plot_f_TT_multipoles()
+cmbLensRec.plot_f_TT_multipoles()
 
 # precompute the lensing noise for the monopole and quadrupole estimators
 #cmbLensRec.save_N_k_TT_multipoles()
